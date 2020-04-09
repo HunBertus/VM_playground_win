@@ -5,17 +5,18 @@ function create_vm {
     param ( [string]$vmname )
 
 # create a home directory for the vm
-New-Item -Path "C:\Hyper-V\" -Name "$vmname" -ItemType "directory"
+$current_dir = (Get-Location).Path
+New-Item -Path "$current_dir\VMs\" -Name "$vmname" -ItemType "directory"
 
 # copying master to vm's home
-Copy-Item C:\Hyper-V\master_image_de.vhdx -Destination C:\Hyper-V\$vmname
+Copy-Item C:\Hyper-V\master_image_de.vhdx -Destination $current_dir\VMs\$vmname
 
 # creating a new vm (maybe later could be parametrized ram, generation, etc)
 new-vm `
 -Name $vmname `
 -MemoryStartupBytes 4Gb `
 -Generation 2 `
--VHDPath C:\Hyper-V\$vmname\master_image_de.vhdx `
+-VHDPath $current_dir\VMs\$vmname\master_image_de.vhdx `
 -SwitchName "Default Switch"
 
 # setting bootorder
