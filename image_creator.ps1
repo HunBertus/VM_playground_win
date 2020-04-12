@@ -1,7 +1,8 @@
 ﻿function create_vm {
     param ( [string]$name )
+$current_dir = (Get-Location).Path
 new-vm -Name $name -MemoryStartupBytes 4Gb -Generation 2 `
--NewVHDPath C:\Hyper-V\$name.vhdx -NewVHDSizeBytes 25Gb `
+-NewVHDPath $current_dir\$name.vhdx -NewVHDSizeBytes 25Gb `
 -SwitchName Privat01
 Add-VMDvdDrive -VMName $name
 $bootorder = Get-VMFirmware -VMName $name
