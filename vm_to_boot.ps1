@@ -53,8 +53,5 @@ sleep 10
 
 # configurating vm network
 
-# renaming interfaces
- #$LANinterface = Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock `
- #{ #(Get-NetIPAddress -AddressFamily IPv4|? {$_.IPAddress -like '169.254*'}).InterfaceAlias ` #} #$WANinterface = Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock `
- #{ #(Get-NetIPAddress -AddressFamily IPv4|? {$_.IPAddress -like '192.168.*'}).InterfaceAlias ` #} Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock { Rename-NetAdapter -Name "Ethernet 3" -NewName "LAN"} Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock { Rename-NetAdapter -Name "Ethernet 2" -NewName "WAN"}  # setting network config for LAN Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock {  New-NetIPAddress -InterfaceAlias LAN -AddressFamily IPv4 -IPAddress 192.168.0.1 -PrefixLength 24} Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock {  Set-DnsClientServerAddress -interfacealias LAN -serveraddresses 192.168.0.1  } # setting Datei und Druckerfreigabe activated:
- Set-NetFirewallRule -DisplayGroup "Datei- und Druckerfreigabe" -Enabled True -Profile Private #installing ad features
+# renaming interfaces Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock { Rename-NetAdapter -InterfaceDescription "*#3" -NewName "LAN"} Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock { Rename-NetAdapter -InterfaceDescription "*#2" -NewName "WAN"}  # setting network config for LAN Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock {  Set-NetIPAddress -InterfaceAlias LAN -AddressFamily IPv4 -IPAddress 192.168.0.1 -PrefixLength 24} Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock {  Set-DnsClientServerAddress -interfacealias LAN -serveraddresses 192.168.0.1  } # setting Datei und Druckerfreigabe activated:
+ Invoke-Command -VMName testvm1 -Credential $cred -ScriptBlock { Set-NetFirewallRule -DisplayGroup "Datei- und Druckerfreigabe" -Enabled True -Profile  Any } #installing ad features
