@@ -1,4 +1,4 @@
-ï»¿# funktion to create a Windows Server 2016 vm from a generalized master vhdx
+# funktion to create a Windows Server 2016 vm from a generalized master vhdx
 # syntax create_server 
 cls 
 $global:server_name=""
@@ -6,7 +6,7 @@ $global:client_name=""
 function create_server {
     param ( 
       [string]$global:server_name = $(Read-Host "1. VM Name (z.B. DC_Uebung_A) default: SLAP_Uebung_DC"),
-      [System.Int64]$vmram = $(Read-Host "Wieviele Gb RAM (z.B 2 fÃ¼r 2Gb usw.) default ist 2Gb")
+      [System.Int64]$vmram = $(Read-Host "Wieviele Gb RAM (z.B 2 für 2Gb usw.) default ist 2Gb")
     )
 if ([String]::IsNullOrEmpty($global:server_name)) { $global:server_name = "SLAP_Uebung_DC" }
 if ($vmram -eq "") { [System.Int64]$vmram = 2 }
@@ -17,7 +17,7 @@ $current_dir = (Get-Location).Path
 New-Item -Path "$current_dir\VMs\" -Name "$global:server_name" -ItemType "directory"|Out-Null 
 
 # copying master to vm's home
-Copy-Item $current_dir\masters\master_image_de.vhdx -Destination $current_dir\VMs\$global:server_name
+Copy-Item $current_dir\masters\win_server16_14393_de_master.vhdx -Destination $current_dir\VMs\$global:server_name
 
 # creating a new vm 
 Write-Host "Aufsetzen den Domaincontroller..."
@@ -26,7 +26,7 @@ new-vm `
 -Name $global:server_name `
 -MemoryStartupBytes ($vmram * 1GB) `
 -Generation 2 `
--VHDPath $current_dir\VMs\$global:server_name\master_image_de.vhdx `
+-VHDPath $current_dir\VMs\$global:server_name\win_server16_14393_de_master.vhdx `
 -SwitchName "Default Switch" `
 
 Write-host "Domaincontroller erstellt"
@@ -36,7 +36,7 @@ $hdddrive = $bootorder.BootOrder[0]
 $pxe = $bootorder.BootOrder[1]
 Set-VMFirmware -VMName $global:server_name -BootOrder $hdddrive,$pxe
 
-# setting VM resolution
+# setting VM resolution (not working)
 Set-VMVideo -VMName $global:server_name -ResolutionType Default -HorizontalResolution 1024 -VerticalResolution 768
 
 # setting up additional network interface (creating if necessary)
@@ -62,7 +62,7 @@ Write-host "$global:server_name gestartet"
 function create_client {
     param ( 
       [string]$global:client_name = $(Read-Host "2. VM Name (z.B. DC_Uebung_A) default: SLAP_Uebung_WinClient"),
-      [System.Int64]$vmram = $(Read-Host "Wieviele Gb RAM (z.B 2 fÃ¼r 2Gb usw.) default ist 2Gb")
+      [System.Int64]$vmram = $(Read-Host "Wieviele Gb RAM (z.B 2 für 2Gb usw.) default ist 2Gb")
     )
 if ([String]::IsNullOrEmpty($global:client_name)) { $global:client_name = "SLAP_Uebung_WinClient" }
 if ($vmram -eq "") { [System.Int64]$vmram = 2 }
@@ -96,7 +96,7 @@ Set-VMFirmware -VMName $global:client_name -BootOrder $hdddrive,$pxe
 
 
 # setting up network interface (creating if necessary)
-Add-VMNetworkAdapter -VMName $global:client_name -SwitchName PrivateSwitch
+#Add-VMNetworkAdapter -VMName $global:client_name -SwitchName PrivateSwitch
 
 # starting vm
 Write-host "$global:client_name starten..."
@@ -116,25 +116,21 @@ create_server
 
 # checking vm status
 
-write-host "PrÃ¼fen $global:server_name status:"
+write-host "Prüfen $global:server_name status:"
 while ( (get-vm -vmname $global:server_name).Heartbeat -notlike 'Ok*') {
 write-host "Booting $global:server_name ... Status: $((get-vm -vmname $global:server_name).Heartbeat)"
 sleep 10
 }
 write-host "$global:server_name ist online! juhhuu :)    Status: $((get-vm -vmname $global:server_name).Heartbeat)"
-
-# configurating vm network
-
-# renaming interfacesWrite-Host "Umbenennen Netzwerk-schnittstellen auf LAN und WAN..." Invoke-Command -VMName $global:server_name -Credential $cred -ScriptBlock { Rename-NetAdapter -InterfaceDescription "*#2" -NewName "WAN"} Invoke-Command -VMName $global:server_name -Credential $cred -ScriptBlock { Rename-NetAdapter -InterfaceDescription "*#3" -NewName "LAN"} write-host "Fertig" # setting network config for LAN #$LAN_IP = read-host "DC LAN Ip-Adresse(z.B. 192.168.0.1)" #$LAN_Prefix = read-host "DC LAN Prefix (z.B. 24)" Invoke-Command -VMName $global:server_name -Credential $cred -ScriptBlock {  New-NetIPAddress -InterfaceAlias LAN -AddressFamily IPv4 -IPAddress $(read-host "DC LAN Ip-Adresse(z.B. 192.168.0.1)") -PrefixLength $(read-host "DC LAN Prefix (z.B. 24)")|out-null} Invoke-Command -VMName $global:server_name -Credential $cred -ScriptBlock {  Set-DnsClientServerAddress -interfacealias LAN -serveraddresses $(read-host "DC DNS-Adresse(z.B. 192.168.0.1)")} # setting Datei und Druckerfreigabe activated:
- Invoke-Command -VMName $global:server_name -Credential $cred -ScriptBlock { Set-NetFirewallRule -DisplayGroup "Datei- und Druckerfreigabe" -Enabled True -Profile  Any }# installing ad features# creating Client vm
+# creating Client vm
 create_client
 
 # checking vm status
-write-host "PrÃ¼fen $global:client_name status:"
+write-host "Prüfen $global:client_name status:"
 while ( (get-vm -vmname $global:client_name).Heartbeat -notlike 'Ok*') {
   write-host "Booting $global:client_name ... Status: $((get-vm -vmname $global:client_name).Heartbeat)"
 sleep 10
 }
 write-host "$global:client_name ist online! juhhuu :)    Status: $((get-vm -vmname $global:client_name).Heartbeat)"
 
- write-host "$global:server_name ist fertig und gestartet" write-host "$global:client_name ist fertig und gestartet" write-host "Username: administrator" write-host "Password: 123user!" write-host "Druckerfreigabe aktiviert" write-host " $global:server_name: LAN Schnittstelle eingestellt"
+ write-host "$global:server_name ist fertig und gestartet" write-host "$global:client_name ist fertig und gestartet" write-host "Username: administrator" write-host "Password: 123user!"
